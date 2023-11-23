@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Post;
-use Illuminate\Foundation\Auth\User;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Facades\Log;
@@ -12,30 +12,34 @@ use Tests\TestCase;
 
 class BlogTest extends TestCase
 {
+    use RefreshDatabase;
+
     /** @test */
     public function a_user_can_create_a_blog_post_from_api()
     {
         # Arrange
-        $user = User::find(1);
+        $users = User::factory(1)->create();
+        $user = $users[0];
         $post = [
             'title' => fake()->sentence(),
             'body' => fake()->paragraph(),
-            'user_id' => $user->id
-        ];
-        
+        ]; 
         
         # Act
         $response = $this->actingAs($user)->post('/api/createBlog', $post);
 
         # Assert
-        $this->assertDatabaseHas('posts', $post);
         $response->assertStatus(201); 
+        $this->assertDatabaseHas('posts', $post);
+        
     }
+
     /** @test */
-    public function a_user_can_create_a_blog_post_from_web()
+    public function a_user_can_create_a_blog_post()
     {
         # Arrange
-        $user = User::find(1);
+        $users = User::factory(1)->create();
+        $user = $users[0];
         $post = [
             'title' => fake()->sentence(),
             'body' => fake()->paragraph(),
@@ -50,17 +54,20 @@ class BlogTest extends TestCase
                         ->post('/createBlog', $post);
 
         # Assert
-        $this->assertDatabaseHas('posts', $post);
         $response->assertStatus(201); 
+        $this->assertDatabaseHas('posts', $post);
     }
+    
     /** @test */
     public function test_user_can_retrieve_single_blog_post()
     {
         // Arrange
-        $post = Post::factory(1)->create();
-
+        $users = User::factory(1)->create();
+        $user = $users[0];
+        $post = Post::factory(1)->create(['user_id' => $user->id]);
+        
         // Act
-        $response = $this->get("/getBlogById/{$post[0]->id}");
+        $response = $this->actingAs($user)->get("/getBlogById/{$post[0]->id}");
 
         // Assert
         $response->assertStatus(200);
@@ -69,5 +76,41 @@ class BlogTest extends TestCase
             'title' => $post[0]->title,
             'body' => $post[0]->body,
         ]);
+    }
+
+    /**@test */
+    public function test_user_can_update_blog_post()
+    {
+        // Arrange
+        $users = User::factory(1)->create();
+        $user = $users[0];
+        $post = Post::factory(1)->create(['user_id' => $user->id]);
+        $newData = [
+            'title' => 'New title',
+            'body' => 'New body',
+        ];
+
+        // Act
+        $response = $this->actingAs($user)->put("/updateBlog/{$post[0]->id}", $newData);
+
+        // Assert
+        $response->assertStatus(200);
+        $this->assertDatabaseHas('posts', array_merge(['id' => $post[0]->id], $newData));
+    }
+
+    /**@test */
+    public function test_user_can_delete_blog_post()
+    {
+        // Arrange
+        $users = User::factory(1)->create();
+        $user = $users[0];
+        $post = Post::factory(1)->create(['user_id' => $user->id]);
+
+        // Act
+        $response = $this->actingAs($user)->delete("/deleteBlog/{$post[0]->id}");
+
+        // Assert
+        $response->assertStatus(204);
+        $this->assertDatabaseMissing('posts', ['id' => $post[0]->id]);
     }
 }

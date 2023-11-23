@@ -18,5 +18,8 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+# Blog Post Testing
 Route::post('/createBlog', [WebPostController::class, 'createBlog']);
 Route::get('/getBlogById/{id}', [WebPostController::class, 'getBlogById']);
+Route::put('/updateBlog/{id}', [WebPostController::class, 'updateBlog']);
+Route::delete('/deleteBlog/{id}', [WebPostController::class, 'deleteBlog']);

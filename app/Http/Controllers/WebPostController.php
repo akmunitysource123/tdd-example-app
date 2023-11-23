@@ -25,4 +25,21 @@ class WebPostController extends Controller
         $post = Post::findOrFail($id);
         return response()->json($post);
     }
+
+    public function updateBlog(Request $request, int $id): JsonResponse
+    {
+        $post = Post::findOrFail($id);
+        $post->update([
+            'title' => $request->input('title'),
+            'body' => $request->input('body'),
+        ]);
+        return response()->json($post);
+    }
+    
+    public function deleteBlog(int $id)
+    {
+        $post = Post::findOrFail($id);
+        $post->delete();
+        return response()->noContent();
+    }
 }

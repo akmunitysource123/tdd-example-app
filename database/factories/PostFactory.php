@@ -23,9 +23,9 @@ class PostFactory extends Factory
      */
     public function definition()
     {
-        $user = User::find(1);
+        //$user = User::find(1);
         return [
-            'user_id' => $user->id,
+            //'user_id' => $user->id,
             'title' => fake()->sentence(),
             'body' => fake()->paragraph(),
         ];
